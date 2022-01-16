@@ -1,10 +1,12 @@
 use rand::Rng;
 
+use crate::display::Display;
 use crate::memory::Memory;
 
 const ENTRY_POINT: u16 = 0x200;
 
 pub struct CPU {
+    display: Display,
     pub memory: Memory,
     vx: [u8; 16],
     stack: Vec<u16>,
@@ -17,6 +19,7 @@ pub struct CPU {
 impl CPU {
     pub fn new() -> CPU {
         CPU {
+            display: Display::new(),
             memory: Memory::new(),
             vx: [0; 16],
             stack: Vec::new(),
@@ -34,7 +37,7 @@ impl CPU {
 
         println!("\n==============================\n\n{:#X}... Read instruction {:#X} from lower {:#X} and higher {:#X}", self.pc, instruction, lower, higher);
 
-        let nnn = instruction & 0x0FFF;             // 12-bit address, lowest 12 bits of instruction
+        let nnn = instruction & 0x0FFF;              // 12-bit address, lowest 12 bits of instruction
         let n = (instruction & 0x000F) as u8;        // 4-bit value, lowest 4 bits of instruction
         let x = ((instruction & 0x0F00) >> 8) as u8; // 4-bit value, lower 4 bits of higher byte
         let y = ((instruction & 0x00F0) >> 4) as u8; // 4-bit value, higher 4 bits of lower byte
@@ -52,7 +55,8 @@ impl CPU {
                     0xE0 => {
                         // 00E0 --- CLS --- Clear the display
                         println!("Clearing the screen.");
-                        unimplemented!();
+                        self.display.clear();
+                        self.pc += 2;
                     }
                     0xEE => {
                         // 00EE -- RET --- Return from a subroutine
@@ -269,11 +273,16 @@ impl CPU {
                 let random: u8 = rand::thread_rng().gen_range(0..=255);
                 let val = random & kk;
                 self.write_vx(x, val);
+                self.pc += 2;
             }
             0x0D => {
-                // Dxyn --- DRW Vx, Vy, n Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+                // Dxyn --- DRW Vx, Vy, n --- Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
                 println!("Drawing {}-byte sprite from i = {:#X}", n, self.i);
-                unimplemented!();
+                let vx = self.read_vx(x);
+                let vy = self.read_vx(y);
+                self.display.draw_sprite(&self.memory, self.i, vx, vy, n);
+                self.display.debug_draw_screen();
+                self.pc += 2;
             }
             0x0E => {
                 match kk {

@@ -24,7 +24,7 @@ impl System {
         }
     }
 
-    pub fn execute(&mut self) {
-        self.cpu.execute();
-    }
+    // pub fn execute(&mut self) {
+    //     self.cpu.execute();
+    // }
 }
