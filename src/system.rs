@@ -18,13 +18,13 @@ impl System {
         }
     }
 
-    pub fn run(&mut self) {
-        loop {
-            self.cpu.execute();
-        }
-    }
-
-    // pub fn execute(&mut self) {
-    //     self.cpu.execute();
+    // pub fn run(&mut self) {
+    //     loop {
+    //         self.cpu.execute();
+    //     }
     // }
+
+    pub fn execute(&mut self) {
+        self.cpu.execute();
+    }
 }

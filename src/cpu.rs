@@ -289,12 +289,16 @@ impl CPU {
                     0x9E => {
                         // Ex9E --- SKP Vx --- Skips the next instruction if the key with the value of Vx is pressed
                         println!("Skipping next instruction if the key in V{:X} is pressed", x);
-                        unimplemented!();
+                        // unimplemented!();
+                        println!("unimplemented key press check");
+                        
                     }
                     0xA1 => {
                         // ExA1 --- SKNP Vx --- Skips the next instruction if the key with the value of Vx is not pressed
                         println!("Skipping next instruction if the key in V{:X} is not pressed", x);
-                        unimplemented!();
+                        // unimplemented!();
+                        println!("unimplemented key press check");
+                        self.pc += 2;
                     }
                     _ => panic!("Unrecognized instruction {:#X} at {:#X}", instruction, self.pc),
                 }
