@@ -281,7 +281,6 @@ impl CPU {
                 let vx = self.read_vx(x);
                 let vy = self.read_vx(y);
                 self.display.draw_sprite(&self.memory, self.i, vx, vy, n);
-                self.display.debug_draw_screen();
                 self.pc += 2;
             }
             0x0E => {
@@ -370,5 +369,9 @@ impl CPU {
 
     fn print_stack(&mut self) {
         println!("Stack: {:#X?}", self.stack);
+    }
+
+    pub fn get_screen(&self) -> &[u8] {
+        self.display.get_screen()
     }
 }

@@ -18,13 +18,11 @@ impl System {
         }
     }
 
-    // pub fn run(&mut self) {
-    //     loop {
-    //         self.cpu.execute();
-    //     }
-    // }
-
     pub fn execute(&mut self) {
         self.cpu.execute();
+    }
+
+    pub fn get_screen(&self) -> &[u8] {
+        self.cpu.get_screen()
     }
 }

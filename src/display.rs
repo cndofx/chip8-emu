@@ -1,8 +1,6 @@
 use crate::memory::Memory;
 
-pub const WIDTH: usize = 64;
-pub const HEIGHT: usize = 32;
-pub const PIXEL_COUNT: usize = WIDTH * HEIGHT;
+use crate::{WIDTH, HEIGHT, PIXEL_COUNT};
 
 pub struct Display {
     screen: [u8; PIXEL_COUNT],
@@ -75,5 +73,9 @@ impl Display {
         for i in 0..PIXEL_COUNT {
             self.screen[i] = 0;
         }
+    }
+
+    pub fn get_screen(&self) -> &[u8] {
+        &self.screen
     }
 }
