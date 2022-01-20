@@ -2,8 +2,9 @@ use std::fs::File;
 use std::io::{BufReader, Read};
 
 use pixels::{Pixels, SurfaceTexture};
+use winit_input_helper::WinitInputHelper;
 use winit::dpi::{PhysicalSize};
-use winit::event::VirtualKeyCode;
+use winit::event::{VirtualKeyCode};
 use winit::{
     event::{Event},
     event_loop::{ControlFlow, EventLoop},
@@ -11,10 +12,11 @@ use winit::{
 };
 
 use system::System;
-use winit_input_helper::WinitInputHelper;
+use keyboard::Keyboard;
 
 mod cpu;
 mod display;
+mod keyboard;
 mod memory;
 mod system;
 
