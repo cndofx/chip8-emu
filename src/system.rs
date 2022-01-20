@@ -1,3 +1,5 @@
+use winit_input_helper::WinitInputHelper;
+
 use crate::cpu::CPU;
 
 pub struct System {
@@ -24,5 +26,9 @@ impl System {
 
     pub fn get_screen(&self) -> &[u8] {
         self.cpu.get_screen()
+    }
+
+    pub fn update_keys(&mut self, input: &WinitInputHelper) {
+        self.cpu.keyboard.update_keys(input);
     }
 }

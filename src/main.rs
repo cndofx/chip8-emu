@@ -67,7 +67,9 @@ fn main() {
             if let Some(size) = input.window_resized() {
                 pixels.resize_surface(size.width, size.height);
             }
-            for _ in 0..4 {
+
+            system.update_keys(&input);
+            for _ in 0..1 {
                 system.execute();
             }
             window.request_redraw();

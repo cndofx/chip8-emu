@@ -7,6 +7,7 @@ use winit_input_helper::WinitInputHelper;
 // 7 8 9 E = A S D F
 // A 0 B F = Z X C V
 
+#[derive(Debug)]
 pub struct Keyboard {
     keys: [bool; 16],
 }
@@ -42,12 +43,5 @@ impl Keyboard {
 
     pub fn is_key_pressed(&self, key: u8) -> bool {
         self.keys[key as usize]
-    }
-
-    pub fn print(&self) {
-        println!("KEYBOARD STATE");
-        for (i, state) in self.keys.iter().enumerate() {
-            println!("key {}: {}", i, state);
-        }
     }
 }

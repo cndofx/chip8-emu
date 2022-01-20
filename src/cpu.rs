@@ -1,6 +1,7 @@
 use rand::Rng;
 
 use crate::display::Display;
+use crate::keyboard::Keyboard;
 use crate::memory::Memory;
 
 const ENTRY_POINT: u16 = 0x200;
@@ -8,6 +9,7 @@ const ENTRY_POINT: u16 = 0x200;
 pub struct CPU {
     display: Display,
     pub memory: Memory,
+    pub keyboard: Keyboard,
     vx: [u8; 16],
     stack: Vec<u16>,
     i: u16,
@@ -20,6 +22,7 @@ impl CPU {
     pub fn new() -> CPU {
         CPU {
             display: Display::new(),
+            keyboard: Keyboard::new(),
             memory: Memory::new(),
             vx: [0; 16],
             stack: Vec::new(),
@@ -288,16 +291,18 @@ impl CPU {
                     0x9E => {
                         // Ex9E --- SKP Vx --- Skips the next instruction if the key with the value of Vx is pressed
                         println!("Skipping next instruction if the key in V{:X} is pressed", x);
-                        // unimplemented!();
-                        println!("unimplemented key press check");
-                        
+                        let vx = self.read_vx(x);
+                        if self.keyboard.is_key_pressed(vx) {
+                            self.pc += 2;
+                        }      
                     }
                     0xA1 => {
                         // ExA1 --- SKNP Vx --- Skips the next instruction if the key with the value of Vx is not pressed
                         println!("Skipping next instruction if the key in V{:X} is not pressed", x);
-                        // unimplemented!();
-                        println!("unimplemented key press check");
-                        self.pc += 2;
+                        let vx = self.read_vx(x);
+                        if !self.keyboard.is_key_pressed(vx) {
+                            self.pc += 2;
+                        }
                     }
                     _ => panic!("Unrecognized instruction {:#X} at {:#X}", instruction, self.pc),
                 }
