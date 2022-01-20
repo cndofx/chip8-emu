@@ -1,6 +1,6 @@
 use crate::memory::Memory;
 
-use crate::{WIDTH, HEIGHT, PIXEL_COUNT};
+use crate::{WIDTH, PIXEL_COUNT};
 
 pub struct Display {
     screen: [u8; PIXEL_COUNT],
@@ -49,24 +49,6 @@ impl Display {
             }
         }
         overwritten
-    }
-
-    pub fn debug_draw_screen(&mut self) {
-        println!("   1   5    10   15   20   25   30   35   40   45   50   55   60  64");
-        for y in 0..HEIGHT {
-            print!("{:<3}", y + 1);
-            for x in 0..WIDTH {
-                let index = Display::index_from_coords(x as usize, y as usize);
-                if self.screen[index] == 0 {
-                    print!(".");
-                }
-                else {
-                    print!("#");
-                }
-            }
-            print!("\n");
-        }
-        print!("\n");
     }
 
     pub fn clear(&mut self) {

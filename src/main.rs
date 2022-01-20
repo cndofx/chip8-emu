@@ -1,11 +1,11 @@
 use std::fs::File;
 use std::io::{BufReader, Read};
 
-use pixels::{Error, Pixels, SurfaceTexture};
-use winit::dpi::{LogicalSize, PhysicalSize};
+use pixels::{Pixels, SurfaceTexture};
+use winit::dpi::{PhysicalSize};
 use winit::event::VirtualKeyCode;
 use winit::{
-    event::{Event, WindowEvent},
+    event::{Event},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
@@ -71,7 +71,6 @@ fn main() {
             window.request_redraw();
         }
     });
-
 }
 
 fn draw_screen(frame: &mut [u8], system: &System) {
