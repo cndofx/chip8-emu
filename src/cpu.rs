@@ -282,7 +282,11 @@ impl CPU {
                 println!("Drawing {}-byte sprite from i = {:#X}", n, self.i);
                 let vx = self.read_vx(x);
                 let vy = self.read_vx(y);
-                self.display.draw_sprite(&self.memory, self.i, vx, vy, n);
+                if self.display.draw_sprite(&self.memory, self.i, vx, vy, n) {
+                    self.write_vx(0xF, 1);
+                } else {
+                    self.write_vx(0xF, 0);
+                }
                 self.pc += 2;
             }
             0x0E => {
