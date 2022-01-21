@@ -214,18 +214,17 @@ impl CPU {
                     0x07 => {
                         // 8xy7 --- SUBN Vx, Vy --- Set Vx = Vy - Vx, set VF = NOT borrow
                         println!("Writing V{:X} - V{:X} to V{:X}", y, x, x);
-                        let vx = self.read_vx(x);
-                        let vy = self.read_vx(y);
+                        let vx = self.read_vx(x) as i16;
+                        let vy = self.read_vx(y) as i16;
                         if vy > vx {
                             println!("Setting VF flag to 1");
                             self.write_vx(0xF, 1);
-                            self.write_vx(x, vy - vx);
                         }
                         else {
                             println!("Setting VF flag to 0");
                             self.write_vx(0xF, 0);
-                            self.write_vx(x, 0);
                         }
+                        self.write_vx(x, (vy - vx) as u8);
                     }
                     0x0E => {
                         // 8xyE --- SHL Vx {, Vy} --- Set Vx = Vx SHL 1
@@ -327,6 +326,33 @@ impl CPU {
                         self.i += vx as u16;
                         println!("Adding V{:X} = {:#X} to i", x, vx);
                     }
+                    0x29 => {
+                        // Fx29 --- LD F, Vx --- Set i = location of sprite for digit Vx
+                        println!("Setting i to the location of the sprite for the digit in V{:X}", x);
+                        let vx = self.read_vx(x);
+                        //println!("location = V{:X} * 5 = {:#X}", x, vx * 5);
+                        // self.memory.write_byte(self.i, vx * 5);
+                        self.i = vx as u16 * 5;
+                    }
+                    0x33 => {
+                        // Fx33 --- LD B, Vx --- Store BCD representation of Vx in addresses I, I+1, and I+2
+                        println!("Storing BCD representation of V{:X} in i, i+1, and i+2", x);
+                        let vx = self.read_vx(x);
+                        let hundreds = (vx / 100) % 10;
+                        let tens = (vx / 10) % 10;
+                        let ones = (vx / 1) % 10;
+                        self.memory.write_byte(self.i, hundreds);
+                        self.memory.write_byte(self.i + 1, tens);
+                        self.memory.write_byte(self.i + 2, ones);
+                    }
+                    0x55 => {
+                        // Fx55 --- LD [i], Vx --- Store values from V0 through Vx in memory starting at address i
+                        println!("Storing values from V0 through V{:X} at address i", x);
+                        for k in 0..=x {
+                            let value = self.read_vx(k);
+                            self.memory.write_byte(self.i + k as u16, value);
+                        }
+                    }
                     0x65 => {
                         // Fx65 --- LD Vx, [i] --- Load values starting at address i into V0 through Vx
                         println!("Loading values from address i into V0 through V{:X}", x);
@@ -335,7 +361,7 @@ impl CPU {
                             self.write_vx(k, value);
                         }
                     }
-                    _ => panic!("Unrecognized instruction {:#X}", instruction),
+                    _ => panic!("Unrecognized instruction {:#X} at {:#X}", instruction, self.pc),
                 }
                 self.pc += 2;
             }
