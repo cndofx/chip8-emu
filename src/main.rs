@@ -12,7 +12,6 @@ use winit::{
 };
 
 use system::System;
-use keyboard::Keyboard;
 
 mod cpu;
 mod display;

@@ -320,6 +320,11 @@ impl CPU {
                         let vx = self.read_vx(x);
                         self.dt = vx;
                     }
+                    0x18 => {
+                        // Fx18 --- LD ST, Vx --- Set sound timer = Vx
+                        let vx = self.read_vx(x);
+                        self.st = vx;
+                    }
                     0x1E => {
                         // Fx1E --- ADD I, Vx --- Set I = I + Vx
                         let vx = self.read_vx(x);

@@ -23,49 +23,13 @@ impl Display {
 
         for _ in 0..8 {
             let i = Display::index_from_coords(x, y);
-            // match (byte & 0b1000_0000) >> 7 {
-            //     0 => {
-            //         if self.screen[i] == 1 {
-            //             overwritten = true;
-            //         }
-            //         self.screen[i] = 0;
-            //     }
-            //     1 => self.screen[i] = 1,
-            //     _ => unreachable!(),
-            // }
             let old = self.screen[i];
             self.screen[i] = self.screen[i] ^ ((byte & 0b1000_0000) >> 7);
             overwritten = overwritten || (old == 1 && self.screen[i] == 0);
             x += 1;
             byte = byte << 1;
         }
-
         overwritten
-    }
-
-    pub fn _draw_byte(&mut self, byte: u8, x: u8, y: u8) -> bool {
-        let mut erased = false;
-        let mut coord_x = x as usize;
-        let mut coord_y = y as usize;
-        let mut b = byte;
-        
-        for _ in 0..8 {
-            coord_x %= WIDTH;
-            coord_y %= HEIGHT;
-            let index = Display::index_from_coords(coord_x, coord_y);
-            let bit = (b & 0b1000_0000) >> 7;
-            let prev_value = self.screen[index];
-            self.screen[index] ^= bit;
-
-            if prev_value == 1 && self.screen[index] == 0 {
-                erased = true;
-            }
-
-            coord_x += 1;
-            b <<= 1;
-        }
-
-        erased
     }
 
     pub fn draw_sprite(&mut self, memory: &Memory, i: u16, x: u8, y: u8, height: u8) -> bool {
