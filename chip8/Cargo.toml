@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 chip8-core = { path = "../chip8-core" }
+clap = { version = "4.0.29", features = ["derive"] }
