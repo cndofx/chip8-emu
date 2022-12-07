@@ -1,12 +1,5 @@
-[package]
-name = "chip8"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-pixels = "0.9.0"
-rand = "0.8.4"
-winit = "0.26.1"
-winit_input_helper = "0.11.0"
+[workspace]
+members = [
+    "chip8-core",
+    "chip8",
+]
