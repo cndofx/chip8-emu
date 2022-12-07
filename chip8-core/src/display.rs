@@ -13,6 +13,10 @@ impl Display {
         }
     }
 
+    pub fn get(&self) -> &[u8] {
+        &self.pixels
+    }
+
     pub fn clear(&mut self) {
         for pixel in self.pixels.iter_mut() {
             *pixel = 0;

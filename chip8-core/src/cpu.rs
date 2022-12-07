@@ -1,7 +1,7 @@
 use byteorder::{BigEndian, ReadBytesExt};
 use rand::Rng;
 
-use crate::{bus::Bus, memory::Memory};
+use crate::bus::Bus;
 
 #[derive(Debug)]
 pub(crate) struct Cpu {
@@ -32,6 +32,10 @@ impl Cpu {
             pc: 0x200,
             stack: Vec::with_capacity(16),
         }
+    }
+
+    pub fn reset(&mut self) {
+        *self = Cpu::new();
     }
 
     pub fn fetch(&mut self) -> u16 {
@@ -229,7 +233,6 @@ impl Cpu {
         println!("");
 
         self.tick()
-        // self.pc += 2;
     }
 
     fn tick(&mut self) {
