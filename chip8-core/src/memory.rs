@@ -8,7 +8,7 @@ pub(crate) struct Memory {
 impl Memory {
     pub fn new() -> Self {
         Self {
-            memory: vec![0; 4096].into_boxed_slice(),
+            memory: vec![0; MEMORY_SIZE].into_boxed_slice(),
         }
     }
 
@@ -62,6 +62,14 @@ impl Memory {
         for i in 0..length {
             self.memory[address + i] = value;
         }
+    }
+}
+
+impl Default for Memory {
+    fn default() -> Self {
+        let mut memory = Memory::new();
+        memory.load_font();
+        memory
     }
 }
 
