@@ -21,7 +21,6 @@ impl Chip8 {
         let mut file = std::fs::File::open(path)?;
         let mut buf: Vec<u8> = Vec::new();
         let _ = file.read_to_end(&mut buf)?;
-        // self.memory.write_slice(0x200, &buf);
         self.cpu.bus.memory.write_slice(0x200, &buf);
         Ok(())
     }
@@ -31,8 +30,6 @@ impl Chip8 {
             let ins = self.cpu.fetch();
             self.cpu.execute(ins);
         }
-        
-        // println!("{}: {ins:?}");
     }
 }
 
@@ -41,8 +38,6 @@ impl Default for Chip8 {
         Self {
             speed: 500,
             cpu: Cpu::new(),
-            // memory: Memory::default(),
-            // display: Display::new(),
         }
     }
 }

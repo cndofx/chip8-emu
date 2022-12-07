@@ -1,6 +1,7 @@
-use byteorder::{ReadBytesExt, BigEndian};
+use byteorder::{BigEndian, ReadBytesExt};
+use rand::Rng;
 
-use crate::{memory::Memory, bus::Bus};
+use crate::{bus::Bus, memory::Memory};
 
 #[derive(Debug)]
 pub(crate) struct Cpu {
@@ -55,11 +56,41 @@ impl Cpu {
                     self.bus.display.clear();
                     self.pc += 2;
                 }
+                0xEE => {
+                    println!("RET");
+                    self.pc = self.stack.pop().unwrap();
+                }
                 _ => panic!("unrecognized instruction: 0x{instruction:04X?}"),
-            }
+            },
             0x01 => {
                 println!("JP {nnn:04X}");
                 self.pc = nnn;
+            }
+            0x02 => {
+                println!("CALL {nnn:04X}");
+                self.stack.push(self.pc + 2);
+                self.pc = nnn;
+            }
+            0x03 => {
+                println!("SE V{x:X}, {kk:02X}");
+                if self.vx[x as usize] == kk {
+                    self.pc += 2;
+                }
+                self.pc += 2;
+            }
+            0x04 => {
+                println!("SNE V{x:X}, {kk:02X}");
+                if self.vx[x as usize] != kk {
+                    self.pc += 2;
+                }
+                self.pc += 2;
+            }
+            0x05 => {
+                println!("SE V{x:X}, V{y:X}");
+                if self.vx[x as usize] == self.vx[y as usize] {
+                    self.pc += 2;
+                }
+                self.pc += 2;
             }
             0x06 => {
                 println!("LD V{x:X}, 0x{kk:02X}");
@@ -68,12 +99,89 @@ impl Cpu {
             }
             0x07 => {
                 println!("ADD V{x:X}, 0x{kk:02X}");
-                self.vx[x as usize] += kk; 
+                self.vx[x as usize] = self.vx[x as usize].wrapping_add(kk);
+                self.pc += 2;
+            }
+            0x08 => match instruction & 0x000F {
+                0x00 => {
+                    println!("LD V{x:X}, V{y:X}");
+                    self.vx[x as usize] = self.vx[y as usize];
+                    self.pc += 2;
+                }
+                0x01 => {
+                    println!("OR V{x:X}, V{y:X}");
+                    self.vx[x as usize] |= self.vx[y as usize];
+                    self.pc += 2;
+                }
+                0x02 => {
+                    println!("AND V{x:X}, V{y:X}");
+                    self.vx[x as usize] &= self.vx[y as usize];
+                    self.pc += 2;
+                }
+                0x03 => {
+                    println!("XOR V{x:X}, V{y:X}");
+                    self.vx[x as usize] ^= self.vx[y as usize];
+                    self.pc += 2;
+                }
+                0x04 => {
+                    println!("ADD V{x:X}, V{y:X}");
+                    let sum = self.vx[x as usize] as u16 + self.vx[y as usize] as u16;
+                    if sum > 255 {
+                        self.vx[0xF] = 1;
+                    } else {
+                        self.vx[0xF] = 0;
+                    }
+                    self.vx[x as usize] = sum as u8;
+                    self.pc += 2;
+                }
+                0x05 => {
+                    println!("SUB V{x:X}, V{y:X}");
+                    println!("vx = {}, vy = {}", self.vx[x as usize], self.vx[y as usize]);
+                    if self.vx[x as usize] > self.vx[y as usize] {
+                        self.vx[0xF] = 1;
+                    } else {
+                        self.vx[0xF] = 0;
+                    }
+                    self.vx[x as usize] = self.vx[x as usize].wrapping_sub(self.vx[y as usize]);
+                    self.pc += 2;
+                }
+                0x06 => {
+                    println!("SHR V{x:X} {{, V{y:X}}}");
+                    if self.vx[x as usize] & 0b00000001 != 0 {
+                        self.vx[0xF] = 1;
+                    } else {
+                        self.vx[0xF] = 0;
+                    }
+                    self.vx[x as usize] >>= 1;
+                    self.pc += 2;
+                }
+                0x0E => {
+                    println!("SHL V{x:X} {{, V{y:X}}}");
+                    if self.vx[x as usize] & 0b10000000 != 0 {
+                        self.vx[0xF] = 1;
+                    } else {
+                        self.vx[0xF] = 0;
+                    }
+                    self.vx[x as usize] <<= 1;
+                    self.pc += 2;
+                }
+                _ => panic!("unrecognized instruction: 0x{instruction:04X?}"),
+            },
+            0x09 => {
+                println!("SNE V{x:X}, V{y:X}");
+                if self.vx[x as usize] != self.vx[y as usize] {
+                    self.pc += 2;
+                }
                 self.pc += 2;
             }
             0x0A => {
                 println!("LD I, 0x{nnn:04X}");
                 self.i = nnn;
+                self.pc += 2;
+            }
+            0x0C => {
+                println!("RND V{x:X}, {kk:02X}");
+                self.vx[x as usize] = rand::thread_rng().gen_range(0..=255) & kk;
                 self.pc += 2;
             }
             0x0D => {
@@ -89,6 +197,32 @@ impl Cpu {
                 self.bus.display.print();
                 self.pc += 2;
             }
+            0x0F => match kk {
+                0x33 => {
+                    println!("LD B, V{x:X}");
+                    let vx = self.vx[x as usize];
+                    let hundreds = (vx / 100) % 10;
+                    let tens = (vx / 10) % 10;
+                    let ones = (vx / 1) % 10;
+                    self.bus.memory.write_slice(self.i as usize, &[hundreds, tens, ones]);
+                    self.pc += 2;
+                }
+                0x55 => {
+                    println!("LD [I], V{x:X}");
+                    for i in 0..=x as usize {
+                        self.bus.memory.write_byte(self.i as usize + i, self.vx[i]);
+                    }
+                    self.pc += 2;
+                }
+                0x65 => {
+                    println!("LD V{x:X}, [I]");
+                    for i in 0..=x as usize {
+                        self.vx[i] = self.bus.memory.read_byte(self.i as usize + i);
+                    }
+                    self.pc += 2;
+                }
+                _ => panic!("unrecognized instruction: 0x{instruction:04X?}"),
+            },
             _ => panic!("unrecognized instruction: 0x{instruction:04X?}"),
         }
 
