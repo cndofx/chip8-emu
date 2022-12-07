@@ -1,12 +1,14 @@
 use std::{path::Path, io::Read};
 
-use crate::memory::Memory;
+use crate::{memory::Memory, cpu::Cpu, display::Display};
 
 #[derive(Debug)]
 pub struct Chip8 {
     /// CPU speed in Hz
     speed: u32,
-    memory: Memory,
+    cpu: Cpu,
+    // memory: Memory,
+    // display: Display,
 }
 
 impl Chip8 {
@@ -19,8 +21,18 @@ impl Chip8 {
         let mut file = std::fs::File::open(path)?;
         let mut buf: Vec<u8> = Vec::new();
         let _ = file.read_to_end(&mut buf)?;
-        self.memory.write_slice(0x200, &buf);
+        // self.memory.write_slice(0x200, &buf);
+        self.cpu.bus.memory.write_slice(0x200, &buf);
         Ok(())
+    }
+
+    pub fn run(&mut self) {
+        loop {
+            let ins = self.cpu.fetch();
+            self.cpu.execute(ins);
+        }
+        
+        // println!("{}: {ins:?}");
     }
 }
 
@@ -28,7 +40,9 @@ impl Default for Chip8 {
     fn default() -> Self {
         Self {
             speed: 500,
-            memory: Memory::default()
+            cpu: Cpu::new(),
+            // memory: Memory::default(),
+            // display: Display::new(),
         }
     }
 }

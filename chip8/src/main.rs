@@ -6,5 +6,7 @@ fn main() {
 
     chip8.load_rom("roms/IBM Logo.ch8").unwrap();
 
-    println!("{:X?}", chip8);
+    // println!("{:X?}", chip8);
+
+    chip8.run();
 }
