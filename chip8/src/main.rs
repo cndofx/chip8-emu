@@ -71,9 +71,6 @@ async fn main() {
     let mut last_time = 0.0;
 
     loop {
-        // let e = is_key_down(KeyCode::A);
-        // dbg!(&e);
-
         update_keys(&mut chip8);
 
         // run emulator cycles
@@ -167,9 +164,6 @@ async fn main() {
                         ui.label("Window Background Color");
                     });
                 });
-                // if ui.add(egui::Button::new("Exit")).clicked() {
-                //     done = true;
-                // }
                 ui.label(format!("{} fps, {} cps, {} cycles", get_fps(), egui_state.target_fps as u32 * egui_state.cycles_per_frame, total_cycles));
             });
         });
@@ -212,9 +206,10 @@ async fn main() {
             },
         );
 
+        
         // render egui menus to screen
         egui_macroquad::draw();
-
+        
         // fps limit
         let target_time = 1.0 / egui_state.target_fps as f64;
         let delta_time = get_time() - last_time;
@@ -225,8 +220,10 @@ async fn main() {
             ));
         }
         last_time = get_time();
+        
 
-        next_frame().await
+        let _ = next_frame().await;
+        texture.delete();
     }
 }
 
