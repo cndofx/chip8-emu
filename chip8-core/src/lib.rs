@@ -3,4 +3,5 @@ mod memory;
 mod cpu;
 mod display;
 mod bus;
+mod keyboard;
 // mod instructions;

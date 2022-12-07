@@ -50,8 +50,8 @@ impl Cpu {
         let x = ((instruction & 0x0F00) >> 8) as u8; // 4-bit value, lower 4 bits of upper byte
         let y = ((instruction & 0x00F0) >> 4) as u8; // 4-bit value, upper 4 bits of lower byte
 
-        println!("pc: 0x{:04X}", self.pc);
-        println!("instruction: 0x{instruction:04X}");
+        self.print_state();
+        println!("Instruction: 0x{instruction:04X}");
 
         match (instruction & 0xF000) >> 12 {
             0x00 => match kk {
@@ -159,6 +159,16 @@ impl Cpu {
                     self.vx[x as usize] >>= 1;
                     self.pc += 2;
                 }
+                0x07 => {
+                    println!("SUBN V{x:X}, V{y:X}");
+                    if self.vx[y as usize] > self.vx[x as usize] {
+                        self.vx[0xF] = 1;
+                    } else {
+                        self.vx[0xF] = 0;
+                    }
+                    self.vx[y as usize] = self.vx[y as usize].wrapping_sub(self.vx[x as usize]);
+                    self.pc += 2;
+                }
                 0x0E => {
                     println!("SHL V{x:X} {{, V{y:X}}}");
                     if self.vx[x as usize] & 0b10000000 != 0 {
@@ -198,10 +208,40 @@ impl Cpu {
                 } else {
                     self.vx[0xF] = 0;
                 }
-                self.bus.display.print();
+                // self.bus.display.print();
                 self.pc += 2;
             }
+            0x0E => match kk {
+                0xA1 => {
+                    println!("SKNP V{x:X}");
+                    if !self.bus.keyboard.is_pressed(self.vx[x as usize]) {
+                        self.pc += 2;
+                    }
+                    self.pc += 2;
+                }
+                _ => panic!("unrecognized instruction: 0x{instruction:04X?}"),
+            }
             0x0F => match kk {
+                0x07 => {
+                    println!("LD V{x:X}, DT");
+                    self.vx[x as usize] = self.dt;
+                    self.pc += 2;
+                }
+                0x15 => {
+                    println!("LD DT, V{x:X}");
+                    self.dt = self.vx[x as usize];
+                    self.pc += 2;
+                }
+                0x1E => {
+                    println!("ADD I, V{x:X}");
+                    self.i = self.i.wrapping_add(self.vx[x as usize] as u16);
+                    self.pc += 2;
+                }
+                0x29 => {
+                    println!("LD F, V{x:X}");
+                    self.i = self.vx[x as usize] as u16 * 5;
+                    self.pc += 2;
+                }
                 0x33 => {
                     println!("LD B, V{x:X}");
                     let vx = self.vx[x as usize];
@@ -242,5 +282,13 @@ impl Cpu {
         if self.st > 0 {
             self.st -= 1;
         }
+    }
+
+    fn print_state(&self) {
+        println!("CPU State:");
+        println!("VX: {:02X?}", self.vx);
+        println!("Stack: {:02X?}", self.stack);
+        println!("PC: 0x{:04X}, I: 0x{:04X}", self.pc, self.i);
+        println!("DT: 0x{:02X}, ST: 0x{:02X}", self.dt, self.st);
     }
 }
