@@ -8,6 +8,31 @@ use macroquad::prelude::*;
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
 
+// QWERTY     CHIP8
+// 1 2 3 4    1 2 3 C
+// Q W E R    4 5 6 D
+// A S D F    7 8 9 E
+// Z X C V    A 0 B F
+
+const KEY_MAP: [KeyCode; 16] = [
+    KeyCode::X,
+    KeyCode::Key1,
+    KeyCode::Key2,
+    KeyCode::Key3,
+    KeyCode::Q,
+    KeyCode::W,
+    KeyCode::E,
+    KeyCode::A,
+    KeyCode::S,
+    KeyCode::D,
+    KeyCode::Z,
+    KeyCode::C,
+    KeyCode::Key4,
+    KeyCode::R,
+    KeyCode::F,
+    KeyCode::V,
+];
+
 struct State {
     target_fps: f32,
     cycles_per_frame: u32,
@@ -44,14 +69,14 @@ async fn main() {
     let height = HEIGHT as f32;
     let mut total_cycles = 0u64;
     let mut last_time = 0.0;
-    // let mut done = false;
 
     loop {
+        // let e = is_key_down(KeyCode::A);
+        // dbg!(&e);
 
-        // if done {
-        //     break;
-        // }
+        update_keys(&mut chip8);
 
+        // run emulator cycles
         if !egui_state.paused && chip8.is_loaded() {
             for _ in 0..egui_state.cycles_per_frame {
                 chip8.step();
@@ -87,6 +112,11 @@ async fn main() {
                         let mut dialog = FileDialog::open_file(None);
                         dialog.open();
                         egui_state.file_dialog = Some(dialog);
+                    }
+                    if ui.add(egui::Button::new("Reload ROM")).clicked() {
+                        // chip8.reset()
+                        chip8.reload_rom().unwrap_or_else(|_| eprintln!("can't reload rom if no rom is loaded"));
+                        total_cycles = 0;
                     }
                     if ui.add(egui::Button::new("Reset")).clicked() {
                         chip8.reset();
@@ -140,7 +170,7 @@ async fn main() {
                 // if ui.add(egui::Button::new("Exit")).clicked() {
                 //     done = true;
                 // }
-                ui.label(format!("{} fps, {} cycles", get_fps(), total_cycles));
+                ui.label(format!("{} fps, {} cps, {} cycles", get_fps(), egui_state.target_fps as u32 * egui_state.cycles_per_frame, total_cycles));
             });
         });
 
@@ -190,10 +220,11 @@ async fn main() {
         let delta_time = get_time() - last_time;
         if delta_time < target_time {
             let sleep_time = target_time - delta_time;
-            std::thread::sleep(std::time::Duration::from_micros((sleep_time * 1000000.0) as u64));
+            std::thread::sleep(std::time::Duration::from_micros(
+                (sleep_time * 1000000.0) as u64,
+            ));
         }
         last_time = get_time();
-
 
         next_frame().await
     }
@@ -205,6 +236,22 @@ fn render(image: &mut Image, pixels: &[u8], foreground: Color, background: Color
             image.set_pixel((i % WIDTH) as u32, (i / WIDTH) as u32, background);
         } else {
             image.set_pixel((i % WIDTH) as u32, (i / WIDTH) as u32, foreground);
+        }
+    }
+}
+
+// QWERTY     CHIP8
+// 1 2 3 4    1 2 3 C
+// Q W E R    4 5 6 D
+// A S D F    7 8 9 E
+// Z X C V    A 0 B F
+
+fn update_keys(chip8: &mut Chip8) {
+    for (i, key) in KEY_MAP.iter().enumerate() {
+        if is_key_down(*key) {
+            chip8.set_key_state(i, true);
+        } else {
+            chip8.set_key_state(i, false);
         }
     }
 }

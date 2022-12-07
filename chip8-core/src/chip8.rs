@@ -1,13 +1,16 @@
-use std::{path::{Path, PathBuf}, io::Read};
+use std::{
+    io::Read,
+    path::{Path, PathBuf},
+};
 
-use crate::cpu::Cpu;
+use crate::{cpu::Cpu, keyboard::Keyboard};
 
 #[derive(Debug)]
 pub struct Chip8 {
     /// CPU speed in Hz
     speed: u32,
     cpu: Cpu,
-    rom_name: Option<String>,
+    rom_path: Option<PathBuf>,
     loaded: bool,
 }
 
@@ -17,27 +20,39 @@ impl Chip8 {
         self.speed = speed;
     }
 
-    pub fn load_rom<P: AsRef<Path>>(&mut self, path: P) -> std::io::Result<()> 
+    pub fn load_rom<P: AsRef<Path>>(&mut self, path: P) -> std::io::Result<()>
     where
-        PathBuf: From<P>
+        PathBuf: From<P>,
     {
         if self.loaded {
             self.reset();
-        } 
+        }
         let path = PathBuf::from(path);
         let mut file = std::fs::File::open(&path)?;
         let mut buf: Vec<u8> = Vec::new();
         let _ = file.read_to_end(&mut buf)?;
         self.cpu.bus.memory.write_slice(0x200, &buf);
         self.loaded = true;
-        self.rom_name = Some(path.file_name().unwrap().to_string_lossy().to_string());
+        self.rom_path = Some(path);
         Ok(())
     }
-    
+
+    pub fn reload_rom(&mut self) -> std::io::Result<()> {
+        if let Some(rom) = self.rom_path.clone() {
+            self.load_rom(&rom)?;
+            Ok(())
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "can't reload rom if no rom is loaded",
+            ))
+        }
+    }
+
     pub fn reset(&mut self) {
         self.cpu.reset();
         self.loaded = false;
-        self.rom_name = None;
+        self.rom_path = None;
     }
 
     pub fn run(&mut self) {
@@ -51,6 +66,10 @@ impl Chip8 {
         self.cpu.execute(ins);
     }
 
+    pub fn set_key_state(&mut self, key: usize, state: bool) {
+        self.cpu.bus.keyboard.set_key_state(key, state);
+    }
+
     pub fn get_display(&self) -> &[u8] {
         self.cpu.bus.display.get()
     }
@@ -60,9 +79,13 @@ impl Chip8 {
     }
 
     pub fn get_rom_name(&self) -> Option<String> {
-        self.rom_name.clone()
+        if let Some(path) = self.rom_path.clone() {
+            let name = path.file_name().unwrap().to_string_lossy().to_string();
+            Some(name)
+        } else {
+            None
+        }
     }
-
 }
 
 impl Default for Chip8 {
@@ -71,7 +94,7 @@ impl Default for Chip8 {
             speed: 500,
             cpu: Cpu::new(),
             loaded: false,
-            rom_name: None,
+            rom_path: None,
         }
     }
 }

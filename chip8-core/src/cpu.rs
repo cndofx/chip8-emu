@@ -19,6 +19,7 @@ pub(crate) struct Cpu {
     // Stack pointer
     // sp: u8
     stack: Vec<u16>,
+    waiting_for_keypress: bool,
 }
 
 impl Cpu {
@@ -31,6 +32,7 @@ impl Cpu {
             dt: 0,
             pc: 0x200,
             stack: Vec::with_capacity(16),
+            waiting_for_keypress: false,
         }
     }
 
@@ -140,7 +142,7 @@ impl Cpu {
                 }
                 0x05 => {
                     println!("SUB V{x:X}, V{y:X}");
-                    println!("vx = {}, vy = {}", self.vx[x as usize], self.vx[y as usize]);
+                    // println!("vx = {}, vy = {}", self.vx[x as usize], self.vx[y as usize]);
                     if self.vx[x as usize] > self.vx[y as usize] {
                         self.vx[0xF] = 1;
                     } else {
@@ -212,6 +214,13 @@ impl Cpu {
                 self.pc += 2;
             }
             0x0E => match kk {
+                0x9E => {
+                    println!("SKP V{x:X}");
+                    if self.bus.keyboard.is_pressed(self.vx[x as usize]) {
+                        self.pc += 2;
+                    }
+                    self.pc += 2;
+                }
                 0xA1 => {
                     println!("SKNP V{x:X}");
                     if !self.bus.keyboard.is_pressed(self.vx[x as usize]) {
@@ -227,9 +236,24 @@ impl Cpu {
                     self.vx[x as usize] = self.dt;
                     self.pc += 2;
                 }
+                0x0A => {
+                    // wait for a key press, then store the value of the key in Vx
+                    println!("LD V{x:X}, K");
+                    println!("waiting for key press");
+                    if let Some(key) = self.bus.keyboard.get_pressed() {
+                        self.vx[x as usize] = key;
+                        self.pc += 2;
+                    }
+                    // dont increment pc if key isn't pressed
+                }
                 0x15 => {
                     println!("LD DT, V{x:X}");
                     self.dt = self.vx[x as usize];
+                    self.pc += 2;
+                }
+                0x18 => {
+                    println!("LD ST, V{x:X}");
+                    self.st = self.vx[x as usize];
                     self.pc += 2;
                 }
                 0x1E => {

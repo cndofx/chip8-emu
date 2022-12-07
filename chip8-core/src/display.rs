@@ -41,7 +41,7 @@ impl Display {
             let old = self.pixels[i];
             self.pixels[i] ^= (byte & 0b10000000) >> 7;
             erased |= old == 1 && self.pixels[i] == 0;
-            x += 1;
+            x = (x + 1) % WIDTH;
             byte <<= 1;
         }
         erased
