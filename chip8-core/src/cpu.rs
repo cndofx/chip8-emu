@@ -23,7 +23,7 @@ pub(crate) struct Cpu {
     // Stack pointer
     // sp: u8
     stack: Vec<u16>,
-    waiting_for_keypress: bool,
+    /// Time since last DT/ST tick
     last_tick_time: Instant,
 
 }
@@ -38,7 +38,6 @@ impl Cpu {
             dt: 0,
             pc: 0x200,
             stack: Vec::with_capacity(16),
-            waiting_for_keypress: false,
             last_tick_time: Instant::now(),
         }
     }
