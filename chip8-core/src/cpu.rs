@@ -1,7 +1,11 @@
+use std::time::Instant;
+
 use byteorder::{BigEndian, ReadBytesExt};
 use rand::Rng;
 
 use crate::bus::Bus;
+
+const TIMERS_WAIT_MICROS: u128 = ((1f64 / 60f64) * 1_000_000f64) as u128;
 
 #[derive(Debug)]
 pub(crate) struct Cpu {
@@ -20,6 +24,8 @@ pub(crate) struct Cpu {
     // sp: u8
     stack: Vec<u16>,
     waiting_for_keypress: bool,
+    last_tick_time: Instant,
+
 }
 
 impl Cpu {
@@ -33,6 +39,7 @@ impl Cpu {
             pc: 0x200,
             stack: Vec::with_capacity(16),
             waiting_for_keypress: false,
+            last_tick_time: Instant::now(),
         }
     }
 
@@ -300,11 +307,14 @@ impl Cpu {
     }
 
     fn tick(&mut self) {
-        if self.dt > 0 {
-            self.dt -= 1;
-        }
-        if self.st > 0 {
-            self.st -= 1;
+        if self.last_tick_time.elapsed().as_micros() > TIMERS_WAIT_MICROS {
+            self.last_tick_time = Instant::now();
+            if self.dt > 0 {
+                self.dt -= 1;
+            }
+            if self.st > 0 {
+                self.st -= 1;
+            }
         }
     }
 
